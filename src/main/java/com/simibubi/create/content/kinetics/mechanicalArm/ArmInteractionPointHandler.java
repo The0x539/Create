@@ -37,6 +37,7 @@ public class ArmInteractionPointHandler {
 
 	static List<ArmInteractionPoint> currentSelection = new ArrayList<>();
 	static ItemStack currentItem;
+	static ArmBlockEntity reconfigureTarget;
 
 	static long lastBlockPos = -1;
 
@@ -127,6 +128,7 @@ public class ArmInteractionPointHandler {
 		CatnipServices.NETWORK.sendToServer(new ArmPlacementPacket(currentSelection, pos));
 		currentSelection.clear();
 		currentItem = null;
+		reconfigureTarget = null;
 	}
 
 	public static void tick() {
@@ -136,18 +138,34 @@ public class ArmInteractionPointHandler {
 			return;
 
 		ItemStack heldItemMainhand = player.getMainHandItem();
-		if (!AllBlocks.MECHANICAL_ARM.isIn(heldItemMainhand)) {
-			currentItem = null;
-		} else {
-			if (heldItemMainhand != currentItem) {
+		if (heldItemMainhand != currentItem) {
+			if (AllBlocks.MECHANICAL_ARM.isIn(heldItemMainhand)) {
 				currentSelection.clear();
 				currentItem = heldItemMainhand;
+			} else {
+				currentItem = null;
 			}
 
-			drawOutlines(currentSelection);
+			if (reconfigureTarget != null) {
+				// Reload the clientside block entity's targets to restore their original modes.
+				reconfigureTarget.updateInteractionPoints = true;
+				// The outline graphics also need to be regenerated for similar reasons.
+				lastBlockPos = -1;
+
+				reconfigureTarget = null;
+			}
 		}
 
-		checkForWrench(heldItemMainhand);
+		if (reconfigureTarget != null && reconfigureTarget.isRemoved()) {
+			currentItem = null;
+			reconfigureTarget = null;
+		}
+
+		if (currentItem != null) {
+			drawOutlines(currentSelection, reconfigureTarget);
+		} else {
+			checkForWrench(heldItemMainhand);
+		}
 	}
 
 	private static void checkForWrench(ItemStack heldItem) {
@@ -178,11 +196,11 @@ public class ArmInteractionPointHandler {
 		}
 
 		if (lastBlockPos != -1) {
-			drawOutlines(currentSelection);
+			drawOutlines(currentSelection, reconfigureTarget);
 		}
 	}
 
-	private static void drawOutlines(Collection<ArmInteractionPoint> selection) {
+	private static void drawOutlines(Collection<ArmInteractionPoint> selection, BlockEntity arm) {
 		for (Iterator<ArmInteractionPoint> iterator = selection.iterator(); iterator.hasNext(); ) {
 			ArmInteractionPoint point = iterator.next();
 
@@ -205,6 +223,14 @@ public class ArmInteractionPointHandler {
 				.colored(color)
 				.lineWidth(1 / 16f);
 		}
+
+		if (arm != null) {
+			BlockPos pos = arm.getBlockPos();
+			VoxelShape shape = arm.getBlockState().getShape(arm.getLevel(), pos);
+			Outliner.getInstance().showAABB(reconfigureTarget, shape.bounds().move(pos))
+				.colored(0x937FE0)
+				.lineWidth(1 / 16f);
+		}
 	}
 
 	private static void put(ArmInteractionPoint point) {
@@ -224,6 +250,14 @@ public class ArmInteractionPointHandler {
 				.equals(pos))
 				return point;
 		return null;
+	}
+
+	public static void beginReconfigure(ArmBlockEntity arm, ItemStack wrench) {
+		currentSelection.clear();
+		arm.inputs.forEach(ArmInteractionPointHandler::put);
+		arm.outputs.forEach(ArmInteractionPointHandler::put);
+		reconfigureTarget = arm;
+		currentItem = wrench;
 	}
 
 }

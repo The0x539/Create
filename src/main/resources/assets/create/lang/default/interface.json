@@ -652,6 +652,7 @@
 	"create.mechanical_arm.extract_from": "Take items from %1$s",
 	"create.mechanical_arm.deposit_to": "Deposit items to %1$s",
 	"create.mechanical_arm.summary": "Mechanical Arm has %1$s input(s) and %2$s output(s).",
+	"create.mechanical_arm.reconfigure": "Reconfiguring Mechanical Arm",
 	"create.mechanical_arm.points_outside_range": "%1$s selected interaction point(s) removed due to range limitations.",
 
 	"create.weighted_ejector.target_set": "Target Selected",

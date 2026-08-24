@@ -50,6 +50,7 @@ public record ArmPlacementPacket(ListTag tag, BlockPos pos) implements Serverbou
 			return;
 
 		arm.interactionPointTag = this.tag;
+		arm.updateInteractionPoints = true;
 	}
 
 	public record ClientBoundRequest(BlockPos pos) implements ClientboundPacketPayload {

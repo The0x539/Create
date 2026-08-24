@@ -11,7 +11,9 @@ import com.simibubi.create.content.kinetics.base.KineticBlock;
 import com.simibubi.create.content.kinetics.mechanicalArm.ArmBlockEntity.Phase;
 import com.simibubi.create.content.kinetics.simpleRelays.ICogWheel;
 import com.simibubi.create.foundation.block.IBE;
+import com.simibubi.create.foundation.utility.CreateLang;
 
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
@@ -20,6 +22,7 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -112,6 +115,33 @@ public class ArmBlock extends KineticBlock implements IBE<ArmBlockEntity>, ICogW
 		});
 
 		return success.booleanValue() ? ItemInteractionResult.SUCCESS : ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+	}
+
+	@Override
+	public InteractionResult onWrenched(BlockState state, UseOnContext context) {
+		if (context.getHand() != InteractionHand.MAIN_HAND)
+			return InteractionResult.PASS;
+
+		Level level = context.getLevel();
+		if (!level.isClientSide)
+			return InteractionResult.SUCCESS;
+
+		BlockPos pos = context.getClickedPos();
+		withBlockEntityDo(level, pos, be -> {
+			ArmBlockEntity existingTarget = ArmInteractionPointHandler.reconfigureTarget;
+			if (existingTarget == null) {
+				ArmInteractionPointHandler.beginReconfigure(be, context.getItemInHand());
+		
+				CreateLang.builder()
+					.translate("mechanical_arm.reconfigure")
+					.style(ChatFormatting.WHITE)
+					.sendStatus(context.getPlayer());
+			} else if (existingTarget == be) {
+				ArmInteractionPointHandler.flushSettings(pos);
+			}
+		});
+
+		return InteractionResult.SUCCESS;
 	}
 
 }
