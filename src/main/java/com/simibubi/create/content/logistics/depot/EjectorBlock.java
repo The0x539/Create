@@ -18,11 +18,13 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
@@ -189,4 +191,24 @@ public class EjectorBlock extends HorizontalKineticBlock implements IBE<EjectorB
 		return false;
 	}
 
+	@Override
+	public InteractionResult onWrenched(BlockState state, UseOnContext context) {
+		if (context.getClickedFace().getAxis() == Direction.Axis.Y) {
+			return super.onWrenched(state, context);
+		}
+
+		if (context.getHand() != InteractionHand.MAIN_HAND)
+			return InteractionResult.PASS;
+
+		Level level = context.getLevel();
+		if (!level.isClientSide)
+			return InteractionResult.SUCCESS;
+
+		BlockPos pos = context.getClickedPos();
+		withBlockEntityDo(level, pos, be -> {
+			EjectorTargetHandler.beginReconfigure(be, context.getItemInHand(), context.getPlayer());
+		});
+
+		return InteractionResult.SUCCESS;
+	}
 }

@@ -657,9 +657,11 @@
 
 	"create.weighted_ejector.target_set": "Target Selected",
 	"create.weighted_ejector.target_not_valid": "Ejecting to Adjacent block (Target was not Valid)",
+	"create.weighted_ejector.new_target_not_valid": "Target not changed (New Target was not Valid)",
 	"create.weighted_ejector.no_target": "Ejecting to Adjacent block (No Target was Selected)",
 	"create.weighted_ejector.targeting": "Ejecting to [%1$s,%2$s,%3$s]",
 	"create.weighted_ejector.stack_size": "Ejected Stack Size",
+	"create.weighted_ejector.reconfigure": "Selecting new Target block",
 
 	"create.logistics.when_multiple_outputs_available": "Distribution Method",
 
